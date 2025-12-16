@@ -11,6 +11,9 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.Security.Claims;
+using DotNetEnv;
+
+Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,9 +21,29 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 
 
+var host = Environment.GetEnvironmentVariable("PGHOST");
+var port = Environment.GetEnvironmentVariable("PGPORT") ?? "5432";
+var db = Environment.GetEnvironmentVariable("PGDATABASE");
+var user = Environment.GetEnvironmentVariable("PGUSER");
+var pass = Environment.GetEnvironmentVariable("PGPASSWORD");
+
+var conncetionString =
+    $"Host={host};" +
+    $"Port={port};" +
+    $"Database={db};" +
+    $"Username={user};" +
+    $"Password={pass};" +
+    $"SSL Mode=Require;" +
+    $"Trust Server Certificate=true";
+
+
+//var conncetionString = builder.Configuration.GetConnectionString("RailwayDb");
+//var port = Environment.GetEnvironmentVariable("PGPORT") ?? "5432";
+//conncetionString += $";Port={port}";
+
 // Postgres
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-options.UseNpgsql(builder.Configuration.GetConnectionString("RailwayDb")));
+options.UseNpgsql(conncetionString));
 
 
 
