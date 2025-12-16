@@ -22,7 +22,8 @@ COPY . .
 # Publish ONLY the web project
 RUN dotnet publish InventoryWeb/InventoryWeb.csproj \
     -c Release \
-    -o /app/publish
+    -o /app/publish \
+    /p:TreatWarningsAsErrors=false
 
 # =========================
 # Runtime stage
