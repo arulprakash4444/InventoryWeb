@@ -28,7 +28,7 @@ var user = Environment.GetEnvironmentVariable("PGUSER");
 var pass = Environment.GetEnvironmentVariable("PGPASSWORD");
 
 var conncetionString =
-    $"Server={host};" +
+    $"Host={host};" +
     $"Port={port};" +
     $"Database={db};" +
     $"Username={user};" +
