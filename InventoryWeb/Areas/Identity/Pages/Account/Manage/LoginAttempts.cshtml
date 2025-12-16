@@ -1,0 +1,43 @@
+﻿@page
+@model InventoryWeb.Areas.Identity.Pages.Account.Manage.LoginAttemptsModel
+@{
+    ViewData["Title"] = "Login Attempts";
+    var indiaTimeZone = TimeZoneInfo.FindSystemTimeZoneById("India Standard Time");
+}
+
+
+<h3>Last 10 Login Attempts</h3>
+
+<div class="table-responsive mt-3">
+<table class="table table-striped table-hover table-bordered align-middle">
+    <thead class=" table-dark">
+        <tr>
+            <th>Time</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.Attempts)
+        {
+            var indiaTime = TimeZoneInfo.ConvertTimeFromUtc(
+            item.AttemptedAt,
+            indiaTimeZone
+            ).ToString("dd-MMM-yyyy hh:mm tt");
+
+            <tr>
+                <td>@indiaTime</td>
+                <td>
+                    @if (item.IsSuccessful)
+                    {
+                        <span class="text-success">Success</span>
+                    }
+                    else
+                    {
+                        <span class="text-danger">Failed</span>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+</div>

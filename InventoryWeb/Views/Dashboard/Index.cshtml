@@ -1,0 +1,782 @@
+﻿@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<!-- --- PAGE STYLES --- -->
+<style>
+    /* 1. Define Variables based on your scheme */
+    :root {
+
+        /* Your Core Scheme (Light) - Renamed Variables */
+        --main-bg-color: #f8f9fa;
+        --main-text-color: #111827;
+        --card-bg-color: #ffffff;
+        --border-line-color: #e5e7eb;
+
+        /* Chart Specifics (Light) */
+        --chart-primary: #0d6efd;
+        --chart-success: #198754;
+        --chart-grid: #e9ecef;
+        --chart-text: #6c757d;
+        --chart-height: 280px;
+
+        /* Heatmap Specifics (Light) */
+        --pattern-bg: #f8f9fa;
+        --pattern-stroke: #e9ecef;
+        --tab-active-text: #0d6efd;
+    }
+
+    /* Dark Mode Overrides */
+    [data-bs-theme="dark"] {
+
+        /* Your Core Scheme (Dark) - Renamed Variables */
+        --main-bg-color: #121212;
+        --main-text-color: #ffffff;
+        /* --card-bg-color: #1e1e1e; */
+        --card-bg-color: var(--bs-body-bg);
+        --border-line-color: #333333;
+
+        /* Chart Specifics (Dark) */
+        --chart-primary: #6ea8fe;
+        --chart-grid: #333333;
+        --chart-text: #adb5bd;
+
+        /* Heatmap Specifics (Dark) */
+        --pattern-bg: #2c2c2c;
+        --pattern-stroke: #444;
+        --tab-active-text: #6ea8fe;
+    }
+
+    /* Apply Global Styles */
+    body {
+        background-color: var(--main-bg-color);
+        color: var(--main-text-color);
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        transition: background-color 0.3s, color 0.3s;
+    }
+
+    .card {
+        background-color: var(--card-bg-color);
+        border-color: var(--border-line-color);
+        color: var(--main-text-color);
+        transition: background-color 0.3s, border-color 0.3s;
+    }
+
+    .stock-info-box {
+        background-color: rgba(0,0,0, 0.03);
+        border-radius: 0.5rem;
+        transition: background-color 0.3s;
+    }
+
+    [data-bs-theme="dark"] .stock-info-box {
+        background-color: rgba(255,255,255, 0.05);
+    }
+
+    /* Standardize Chart Containers */
+    .chart-container {
+        position: relative;
+        height: var(--chart-height);
+        width: 100%;
+        overflow: hidden;
+    }
+
+    /* --- Chart Elements --- */
+    .grid-line {
+        stroke: var(--chart-grid);
+        stroke-dasharray: 4, 4;
+    }
+
+    .grid-line-solid {
+        stroke: var(--chart-grid);
+        stroke-dasharray: none;
+    }
+
+    .tick-line {
+        stroke: var(--chart-grid);
+        stroke-width: 1px;
+    }
+
+    .axis-text {
+        font-size: 12px;
+        fill: var(--chart-text);
+        font-family: inherit;
+    }
+
+    /* NEW: Axis Title Style */
+    .axis-title {
+        font-size: 14px;
+        font-weight: 600;
+        fill: var(--chart-text);
+        text-anchor: middle;
+        letter-spacing: 0.5px;
+    }
+
+
+
+    /* Line Chart */
+    .chart-line {
+        fill: none;
+        stroke: var(--chart-primary);
+        stroke-width: 2.5px;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+
+    .hover-line {
+        stroke: var(--chart-text);
+        stroke-width: 1px;
+        stroke-dasharray: 4, 4;
+        opacity: 0;
+    }
+
+    .hover-dot {
+        fill: var(--card-bg-color);
+        stroke: var(--chart-primary);
+        stroke-width: 2px;
+        opacity: 0;
+    }
+
+    /* Bar Chart */
+    .bar {
+        fill: var(--chart-primary);
+        shape-rendering: geometricPrecision;
+        transition: fill 0.2s;
+    }
+
+        .bar.active {
+            filter: brightness(0.85);
+        }
+
+    /* Heatmap Specifics */
+    .heatmap-cell {
+        transition: filter 0.2s;
+        cursor: pointer;
+    }
+
+        .heatmap-cell:hover {
+            filter: brightness(0.9);
+        }
+
+    [data-bs-theme="dark"] .heatmap-cell:hover {
+        filter: brightness(1.2);
+    }
+
+    .heatmap-cell.empty {
+        cursor: default;
+        filter: none !important;
+    }
+
+    /* Pie Chart Specifics */
+    .slice path {
+        stroke: var(--card-bg-color);
+        stroke-width: 2px;
+        transition: stroke-width 0.2s, stroke 0.2s;
+        cursor: pointer;
+    }
+
+        .slice path:hover {
+            stroke-width: 4px;
+        }
+
+    .slice-text {
+        font-size: 14px;
+        font-weight: 600;
+        fill: #ffffff;
+        text-anchor: middle;
+        pointer-events: none;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
+
+    /* Legend */
+    .legend-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 12px;
+        margin-top: 10px;
+    }
+
+    .legend-item {
+        display: flex;
+        align-items: center;
+        font-size: 14px;
+        color: var(--chart-text);
+    }
+
+    .legend-color {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        margin-right: 6px;
+    }
+
+    /* --- Tooltip --- */
+    .chart-tooltip {
+        position: absolute;
+        top: 0;
+        left: 0;
+        background: rgba(33, 37, 41, 0.95);
+        color: white;
+        padding: 6px 10px;
+        border-radius: 4px;
+        font-size: 12px;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.1s;
+        z-index: 9999;
+        transform: translate(-50%, -120%);
+        white-space: nowrap;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    [data-bs-theme="dark"] .chart-tooltip {
+        background: rgba(255, 255, 255, 0.95);
+        color: black;
+    }
+
+    /* Loading Overlay */
+    .loading-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: var(--card-bg-color);
+        opacity: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 5;
+        pointer-events: none;
+        transition: opacity 0.2s;
+    }
+
+        .loading-overlay.visible {
+            opacity: 0.85;
+            pointer-events: all;
+        }
+</style>
+
+<!-- --- DASHBOARD CONTENT --- -->
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 fw-bold">Sales Dashboard</h1>
+    </div>
+
+    <div class="row g-4">
+        <!-- 1. LINE CHART -->
+        <div class="col-xl-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold mb-3">Amount Trends (Yearly)</h5>
+                    <div id="chart-line" class="chart-container">
+                        <div id="loading-line" class="loading-overlay"><div class="spinner-border text-primary"></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. BAR CHART -->
+        <div class="col-xl-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold mb-3">Order Trends (Yearly)</h5>
+                    <div id="chart-bar" class="chart-container">
+                        <div id="loading-bar" class="loading-overlay"><div class="spinner-border text-primary"></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. HEATMAP -->
+        <div class="col-xl-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold mb-3">Orders Heatmap (Yearly)</h5>
+                    <div id="chart-heatmap" class="chart-container">
+                        <div id="loading-heatmap" class="loading-overlay"><div class="spinner-border text-primary"></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. PIE CHART -->
+        <div class="col-xl-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold mb-3">Category Distribution (Yearly)</h5>
+                    <div id="chart-pie" class="chart-container">
+                        <div id="loading-pie" class="loading-overlay"><div class="spinner-border text-primary"></div></div>
+                    </div>
+                    <div id="legend-pie" class="legend-container"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tooltips -->
+<div id="tooltip-line" class="chart-tooltip"></div>
+<div id="tooltip-bar" class="chart-tooltip"></div>
+<div id="tooltip-heatmap" class="chart-tooltip"></div>
+<div id="tooltip-pie" class="chart-tooltip"></div>
+
+<!-- --- PAGE SCRIPTS --- -->
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script>
+    // --- API Data Fetcher ---
+    const fetchData = (type) => {
+        let url = '';
+        if (type === 'line') url = '/Dashboard/GetStockTrends';
+        else if (type === 'bar') url = '/Dashboard/GetVolumeAnalysis';
+        else if (type === 'heat') url = '/Dashboard/GetActivityHeatmap';
+        else if (type === 'pie') url = '/Dashboard/GetPortfolioDistribution';
+
+        return fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                if (type === 'heat') {
+                    const xLabels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                    // Weeks 1-6. Reversed for display so W1 is at the bottom (standard chart logic)
+                    // or W1 at top depending on preference. Usually W1 is top in calendar views.
+                    // Let's stick to your original requirement: W1 at bottom? Or Top?
+                    // Standard Heatmaps often have W1 at top.
+                    // BUT your previous code had .reverse().
+                    // Let's assume you want W1 at the BOTTOM (Cartesian style).
+                    const yLabels = ["W6", "W5", "W4", "W3", "W2", "W1"];
+
+                    const formattedData = [];
+                    xLabels.forEach((x, monthIndex) => {
+                        yLabels.forEach((y, weekIndex) => {
+                            // Extract numbers: "W1" -> 1
+                            const wNum = parseInt(y.replace('W', ''));
+
+                            // Match against API data.
+                            // API returns: { month: 1-12, week: 1-6, count: X }
+                            const match = data.find(d => d.month === (monthIndex + 1) && d.week === wNum);
+
+                            formattedData.push({
+                                xLabel: x,
+                                yLabel: y, // "W1", "W2"...
+                                value: match ? match.count : null
+                            });
+                        });
+                    });
+                    return { data: formattedData, xLabels, yLabels };
+                }
+                return data;
+            })
+            .catch(err => {
+                console.error("Error fetching data:", err);
+                return [];
+            });
+    };
+
+    const charts = {};
+    const monthNames = ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+    function setupTooltip(id) {
+        const el = document.getElementById(id);
+        document.body.appendChild(el);
+        return d3.select(el);
+    }
+
+    // --- 1. Line Chart ---
+    async function initLine(cId, tId, lId) {
+        const container = document.getElementById(cId), loading = document.getElementById(lId);
+        const tooltip = setupTooltip(tId);
+        loading.classList.add('visible');
+
+        const svg = d3.select(container).append("svg");
+        const g = svg.append("g");
+        const yScale = d3.scaleLinear();
+        const xScale = d3.scalePoint().padding(0.5);
+        const gridG = g.append("g");
+        const axisG = g.append("g").attr("class", "x-axis");
+        const axisTextG = g.append("g");
+        const path = g.append("path").attr("class", "chart-line");
+        const hoverLine = g.append("line").attr("class", "hover-line");
+        const hoverDot = g.append("circle").attr("class", "hover-dot").attr("r", 5);
+        const overlay = g.append("rect").attr("fill", "transparent");
+
+         // --- Added Labels ---
+        const xAxisLabel = g.append("text").attr("class", "axis-title").text("Month");
+        const yAxisLabel = g.append("text").attr("class", "axis-title").attr("transform", "rotate(-90)").text("Amount ($)");
+
+        let width, height, innerWidth, innerHeight, currentData = null;
+        // Increased margins to fit labels
+        const margin = { top: 20, right: 10, bottom: 50, left: 70 };
+
+        function updateDims() {
+            width = container.clientWidth;
+            height = container.clientHeight;
+            innerWidth = width - margin.left - margin.right;
+            innerHeight = height - margin.top - margin.bottom;
+            svg.attr("width", width).attr("height", height);
+            g.attr("transform", `translate(${margin.left},${margin.top})`);
+            yScale.range([innerHeight, 0]);
+            xScale.range([0, innerWidth]);
+            overlay.attr("width", innerWidth).attr("height", innerHeight);
+            hoverLine.attr("y1", 0).attr("y2", innerHeight);
+
+            // Position Labels
+            xAxisLabel.attr("x", innerWidth / 2).attr("y", innerHeight + 50);
+            yAxisLabel.attr("x", -innerHeight / 2).attr("y", -55);
+
+
+            if (currentData) render(currentData, false);
+        }
+
+        function render(data, animate) {
+            xScale.domain(data.map(d => d.time));
+            const yMin = d3.min(data, d => d.value) || 0;
+            const yMax = d3.max(data, d => d.value) || 100;
+            const padding = (yMax - yMin) * 0.1;
+            yScale.domain([Math.max(0, yMin - padding), yMax + padding]);
+
+            gridG.selectAll("*").remove();
+            axisTextG.selectAll("*").remove();
+            const yTicks = yScale.ticks(5);
+            yTicks.forEach(d => {
+                gridG.append("line").attr("class", "grid-line").attr("x1", 0).attr("x2", innerWidth).attr("y1", yScale(d)).attr("y2", yScale(d));
+                axisTextG.append("text").attr("class", "axis-text y-axis-label").attr("x", -10).attr("y", yScale(d) + 4).attr("text-anchor", "end").text(d.toLocaleString());
+            });
+
+            axisG.selectAll("*").remove();
+            const xTicks = xScale.domain();
+            axisG.selectAll(".tick-line").data(xTicks).enter().append("line").attr("class", "tick-line").attr("x1", d => xScale(d)).attr("x2", d => xScale(d)).attr("y1", innerHeight).attr("y2", innerHeight + 5);
+            axisG.selectAll(".tick-label").data(xTicks).enter().append("text").attr("class", "axis-text tick-label").attr("x", d => xScale(d)).attr("y", innerHeight + 20).attr("text-anchor", "middle").text(d => monthNames[d] || d);
+
+            const line = d3.line().x(d => xScale(d.time)).y(d => yScale(d.value)).curve(d3.curveCatmullRom.alpha(0.5));
+            if (animate) path.datum(data).transition().duration(500).ease(d3.easeCubicOut).attr("d", line);
+            else path.datum(data).attr("d", line);
+
+            overlay.on("mousemove", (event) => {
+                const [mx] = d3.pointer(event);
+                const d = data.reduce((a, b) => Math.abs(xScale(a.time) - mx) < Math.abs(xScale(b.time) - mx) ? a : b);
+                if (!d) return;
+                const cx = xScale(d.time), cy = yScale(d.value);
+                hoverLine.attr("x1", cx).attr("x2", cx).style("opacity", 1);
+                hoverDot.attr("cx", cx).attr("cy", cy).style("opacity", 1);
+                tooltip.style("opacity", 1).style("left", (event.pageX + 10) + "px").style("top", (event.pageY - 20) + "px").html(`<div><strong>${monthNames[d.time]}</strong></div><div>$${Math.round(d.value)}</div>`);
+            }).on("mouseleave", () => {
+                hoverLine.style("opacity", 0);
+                hoverDot.style("opacity", 0);
+                tooltip.style("opacity", 0);
+            });
+        }
+        currentData = await fetchData('line');
+        loading.classList.remove('visible');
+        new ResizeObserver(updateDims).observe(container);
+        updateDims();
+        render(currentData, true);
+        return { refresh: updateDims };
+    }
+
+    // --- 2. Bar Chart ---
+    async function initBar(cId, tId, lId) {
+        const container = document.getElementById(cId), loading = document.getElementById(lId);
+        const tooltip = setupTooltip(tId);
+        loading.classList.add('visible');
+
+        const svg = d3.select(container).append("svg");
+        const g = svg.append("g");
+        const yScale = d3.scaleLinear();
+        const xScale = d3.scaleBand().padding(0.2);
+        const gridG = g.append("g");
+        const axisTextG = g.append("g");
+        const xAxisGroup = g.append("g").attr("class", "x-axis");
+        const barGroup = g.append("g").attr("class", "bar-group");
+        const overlay = g.append("rect").attr("fill", "transparent");
+
+        // --- Added Labels ---
+        const xAxisLabel = g.append("text").attr("class", "axis-title").text("Month");
+        const yAxisLabel = g.append("text").attr("class", "axis-title").attr("transform", "rotate(-90)").text("Quantity");
+
+
+        let width, height, innerWidth, innerHeight, currentData = null;
+        // Increased margins to fit labels
+        const margin = { top: 20, right: 10, bottom: 50, left: 70 };
+
+        function updateDims() {
+            width = container.clientWidth;
+            height = container.clientHeight;
+            innerWidth = width - margin.left - margin.right;
+            innerHeight = height - margin.top - margin.bottom;
+            svg.attr("width", width).attr("height", height);
+            g.attr("transform", `translate(${margin.left},${margin.top})`);
+            yScale.range([innerHeight, 0]);
+            xScale.range([0, innerWidth]);
+            overlay.attr("width", innerWidth).attr("height", innerHeight);
+
+            // Position Labels
+            xAxisLabel.attr("x", innerWidth / 2).attr("y", innerHeight + 50);
+            yAxisLabel.attr("x", -innerHeight / 2).attr("y", -55);
+
+
+            if (currentData) render(currentData, false);
+        }
+
+        function render(data, animate) {
+            xScale.domain(data.map(d => d.time));
+            const yMax = d3.max(data, d => d.value) || 10;
+            yScale.domain([0, yMax * 1.1]);
+
+            gridG.selectAll("*").remove();
+            axisTextG.selectAll("*").remove();
+            const yTicks = yScale.ticks(5);
+            yTicks.forEach(d => {
+                gridG.append("line").attr("class", "grid-line").attr("x1", 0).attr("x2", innerWidth).attr("y1", yScale(d)).attr("y2", yScale(d));
+                axisTextG.append("text").attr("class", "axis-text y-axis-label").attr("x", -10).attr("y", yScale(d) + 4).attr("text-anchor", "end").text(d.toLocaleString());
+            });
+
+            xAxisGroup.selectAll("*").remove();
+            const xTicks = xScale.domain();
+            xAxisGroup.selectAll(".tick-line").data(xTicks).enter().append("line").attr("class", "tick-line").attr("x1", d => xScale(d) + xScale.bandwidth()/2).attr("x2", d => xScale(d) + xScale.bandwidth()/2).attr("y1", innerHeight).attr("y2", innerHeight + 5);
+            xAxisGroup.selectAll(".tick-label").data(xTicks).enter().append("text").attr("class", "axis-text tick-label").attr("x", d => xScale(d) + xScale.bandwidth()/2).attr("y", innerHeight + 20).attr("text-anchor", "middle").text(d => monthNames[d] || d);
+
+            const bars = barGroup.selectAll(".bar").data(data);
+            bars.exit().transition().duration(200).attr("y", innerHeight).attr("height", 0).remove();
+            const enter = bars.enter().append("rect").attr("class", "bar").attr("x", d => xScale(d.time)).attr("width", xScale.bandwidth()).attr("rx", 4).attr("y", innerHeight).attr("height", 0);
+            const merge = enter.merge(bars);
+            const t = animate ? merge.transition().duration(500) : merge;
+            t.attr("x", d => xScale(d.time)).attr("width", xScale.bandwidth()).attr("y", d => yScale(d.value)).attr("height", d => innerHeight - yScale(d.value));
+
+            overlay.on("mousemove", (event) => {
+                const [mx] = d3.pointer(event);
+                const step = xScale.step();
+                const index = Math.floor(mx / step);
+                const d = data[index];
+                if (!d) return;
+                barGroup.selectAll(".bar").classed("active", x => x === d);
+                tooltip.style("opacity", 1).style("left", (event.pageX + 10) + "px").style("top", (event.pageY - 20) + "px").html(`<div><strong>${monthNames[d.time]}</strong></div><div>Orders: ${Math.round(d.value)}</div>`);
+            }).on("mouseleave", () => {
+                barGroup.selectAll(".bar").classed("active", false);
+                tooltip.style("opacity", 0);
+            });
+        }
+        currentData = await fetchData('bar');
+        loading.classList.remove('visible');
+        new ResizeObserver(updateDims).observe(container);
+        updateDims();
+        render(currentData, true);
+        return { refresh: updateDims };
+    }
+
+    // --- 3. Heatmap ---
+    async function initHeat(cId, tId, lId) {
+        const container = document.getElementById(cId), loading = document.getElementById(lId);
+        const tooltip = setupTooltip(tId);
+        loading.classList.add('visible');
+
+        const svg = d3.select(container).append("svg");
+        let currentData = null;
+
+        function render(dataset, animate) {
+
+            if (!dataset || !dataset.yLabels) return; // Guard clause
+
+            svg.selectAll("*").remove();
+            const w = container.clientWidth;
+            const h = container.clientHeight || 250;
+            svg.attr("width", w).attr("height", h);
+
+            const style = getComputedStyle(document.body);
+            const patBg = style.getPropertyValue('--pattern-bg').trim() || '#f8f9fa';
+            const patStr = style.getPropertyValue('--pattern-stroke').trim() || '#e9ecef';
+            const tabColorRaw = style.getPropertyValue('--tab-active-text').trim();
+            const tabColor = d3.color(tabColorRaw) || d3.color('#0d6efd');
+
+            const defs = svg.append("defs");
+            const pattern = defs.append("pattern").attr("id", "stripedPattern").attr("patternUnits", "userSpaceOnUse").attr("width", 4).attr("height", 4).attr("patternTransform", "rotate(45)");
+            pattern.append("rect").attr("width", 4).attr("height", 4).attr("fill", patBg);
+            pattern.append("rect").attr("width", 2).attr("height", 4).attr("fill", patStr);
+
+            const tempText = svg.append("text").attr("class", "axis-text").style("opacity", 0);
+            let maxLabelWidth = 0;
+            dataset.yLabels.forEach(l => {
+                tempText.text(l);
+                maxLabelWidth = Math.max(maxLabelWidth, tempText.node().getComputedTextLength());
+            });
+            tempText.remove();
+
+
+            // Adjusted margins for labels
+            const margin = { top: 20, right: 10, bottom: 50, left: maxLabelWidth + 45 };
+
+            const innerW = w - margin.left - margin.right;
+            const innerH = h - margin.top - margin.bottom;
+            const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+
+
+            // --- Added Axis Labels ---
+            g.append("text")
+                .attr("class", "axis-title")
+                .attr("x", innerW / 2)
+                .attr("y", innerH + 50)
+                .text("Month");
+
+            g.append("text")
+                .attr("class", "axis-title")
+                .attr("transform", "rotate(-90)")
+                .attr("x", -innerH / 2)
+                .attr("y", -maxLabelWidth - 30) // Offset based on text width
+                .text("Week");
+
+
+            const xScale = d3.scaleBand().range([0, innerW]).domain(dataset.xLabels).padding(0.05);
+            const yScale = d3.scaleBand().range([0, innerH]).domain(dataset.yLabels).padding(0.05);
+
+            const maxValue = d3.max(dataset.data, d => d.value) || 10;
+            const colorScale = d3.scaleLinear().domain([0, maxValue]).range([tabColor.copy({opacity: 0.1}), tabColor]);
+
+            // Draw X Axis (Bottom)
+            g.append("g").attr("transform", `translate(0, ${innerH})`)
+                .call(d3.axisBottom(xScale).tickSize(0).tickPadding(8))
+                .select(".domain").remove();
+            g.selectAll(".tick text").attr("class", "axis-text").attr("text-anchor", "middle").attr("dy", "1em");
+
+            // --- DRAW Y AXIS WITH CENTERED LABELS ---
+            dataset.yLabels.forEach(label => {
+                const yTop = yScale(label);
+                const yCenter = yTop + yScale.bandwidth() / 2;
+                const yBottom = yTop + yScale.bandwidth();
+
+                // Draw grid line at bottom
+                g.append("line")
+                    .attr("class", "grid-line")
+                    .attr("x1", 0).attr("x2", innerW)
+                    .attr("y1", yBottom).attr("y2", yBottom)
+                    .attr("stroke-dasharray", "4,4");
+
+                // Draw label at center
+                g.append("text")
+                    .attr("class", "axis-text")
+                    .attr("x", -10)
+                    .attr("y", yCenter)
+                    .attr("dominant-baseline", "middle")
+                    .attr("text-anchor", "end")
+                    .text(label);
+            });
+
+            // Draw top border line
+            const firstY = yScale(dataset.yLabels[0]);
+            g.append("line").attr("class", "grid-line").attr("x1", 0).attr("x2", innerW).attr("y1", firstY).attr("y2", firstY).attr("stroke-dasharray", "4,4");
+
+            // Draw Tiles
+            const cells = g.selectAll(".heatmap-cell").data(dataset.data).enter().append("rect")
+                .attr("class", d => d.value === null ? "heatmap-cell empty" : "heatmap-cell")
+                .attr("x", d => xScale(d.xLabel))
+                .attr("y", d => yScale(d.yLabel))
+                .attr("width", xScale.bandwidth())
+                .attr("height", yScale.bandwidth())
+                .attr("rx", 4).attr("ry", 4)
+                .style("fill", d => d.value === null ? "url(#stripedPattern)" : colorScale(d.value));
+
+            if (animate) {
+                cells.attr("transform", `translate(${xScale.bandwidth()/2}, ${yScale.bandwidth()/2}) scale(0)`)
+                    .transition().duration(500).delay((d,i) => i * 5)
+                    .attr("transform", "translate(0,0) scale(1)");
+            }
+
+            cells.on("mouseover", (event, d) => {
+                if (d.value === null) return;
+                const rect = container.getBoundingClientRect();
+                const xPos = xScale(d.xLabel) + xScale.bandwidth()/2;
+                const yPos = yScale(d.yLabel);
+                tooltip.style("opacity", 1)
+                    .style("left", (rect.left + margin.left + xPos + window.scrollX) + "px")
+                    .style("top", (rect.top + margin.top + yPos - 10 + window.scrollY) + "px")
+                    .html(`<div><strong>${d.xLabel}, ${d.yLabel}</strong></div><div>Orders: ${d.value}</div>`);
+            }).on("mouseleave", () => tooltip.style("opacity", 0));
+        }
+
+        currentData = await fetchData('heat');
+        loading.classList.remove('visible');
+        new ResizeObserver(() => { if(currentData) render(currentData, false); }).observe(container);
+        render(currentData, true);
+        return { refresh: () => { if(currentData) render(currentData, false); } };
+    }
+
+    // --- 4. Pie Chart ---
+    async function initPie(cId, tId, lId, legId) {
+        const container = document.getElementById(cId), loading = document.getElementById(lId);
+        const tooltip = setupTooltip(tId);
+        const legend = d3.select(document.getElementById(legId));
+        const svg = d3.select(container).append("svg"), g = svg.append("g");
+        loading.classList.add('visible');
+        let currentData = null, radius;
+        function update() {
+            const w = container.clientWidth, h = container.clientHeight;
+            svg.attr("width", w).attr("height", h);
+            g.attr("transform", `translate(${w/2},${h/2})`);
+            radius = Math.min(w,h)/2 - 10;
+            if(currentData) render(currentData, false);
+        }
+        function render(data, animate) {
+            const pie = d3.pie().value(d=>d.value).sort(null);
+            const arc = d3.arc().innerRadius(radius*0.6).outerRadius(radius);
+            const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+            const baseColors = ['#0d6efd', '#198754', '#ffc107', '#dc3545', '#6f42c1', '#d63384'];
+            const colors = d3.scaleOrdinal().domain(data.map(d=>d.label)).range(baseColors.map(c => isDark ? d3.color(c).brighter(0.3) : c));
+            const slices = g.selectAll(".slice").data(pie(data));
+            slices.exit().remove();
+            const enter = slices.enter().append("g").attr("class","slice");
+            const allPaths = enter.append("path").merge(slices.select("path"));
+
+            if(animate) {
+                allPaths.transition().duration(800).ease(d3.easeBackOut.overshoot(1.5))
+                    .attrTween("d", d => {
+                        const i = d3.interpolate(d.startAngle+0.1, d.endAngle);
+                        return t => { d.endAngle = i(t); return arc(d); };
+                    });
+            } else { allPaths.attr("d", arc); }
+
+            let labelGroup = g.select(".label-group");
+            if (labelGroup.empty()) labelGroup = g.append("g").attr("class", "label-group");
+            const labels = labelGroup.selectAll("text").data(pie(data));
+            labels.exit().remove();
+            labels.enter().append("text").attr("class", "slice-text").attr("dy", "0.35em").merge(labels).attr("transform", d => `translate(${arc.centroid(d)})`).attr("opacity", d => (d.endAngle - d.startAngle > 0.25) ? 1 : 0).text(d => d.data.value);
+
+            allPaths.attr("fill", d=>colors(d.data.label)).on("mousemove", (e,d) => {
+                d3.select(e.target).style("stroke", colors(d.data.label));
+                d3.select(e.target.parentNode).raise();
+                g.select(".label-group").raise();
+                tooltip.style("opacity",1).style("left", (e.pageX+10)+"px").style("top", (e.pageY-20)+"px").html(`<div><strong>${d.data.label}</strong></div><div>${d.data.value} Orders</div>`);
+            }).on("mouseleave", (e) => {
+                d3.select(e.target).style("stroke", null);
+                tooltip.style("opacity",0);
+            });
+
+            legend.html("");
+            data.forEach(d => {
+                const item = legend.append("div").attr("class","legend-item");
+                item.append("div").attr("class","legend-color").style("background", colors(d.label));
+                item.append("span").text(d.label);
+            });
+        }
+        currentData = await fetchData('pie');
+        loading.classList.remove('visible');
+        new ResizeObserver(update).observe(container);
+        update();
+        render(currentData, true);
+        return { refresh: update };
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
+        charts.line = initLine('chart-line', 'tooltip-line', 'loading-line');
+        charts.bar = initBar('chart-bar', 'tooltip-bar', 'loading-bar');
+        charts.heatmap = initHeat('chart-heatmap', 'tooltip-heatmap', 'loading-heatmap');
+        charts.pie = initPie('chart-pie', 'tooltip-pie', 'loading-pie', 'legend-pie');
+    });
+
+    const observer = new MutationObserver(mutations => {
+        mutations.forEach(mutation => {
+            if (mutation.attributeName === "data-bs-theme") {
+                setTimeout(() => Object.values(charts).forEach(p => p.then(c => c.refresh())), 50);
+            }
+        });
+    });
+    observer.observe(document.documentElement, { attributes: true });
+</script>

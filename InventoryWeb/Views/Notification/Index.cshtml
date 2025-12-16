@@ -1,0 +1,137 @@
+﻿@{
+    ViewData["Title"] = "Notifications List";
+    var indiaTimeZone = TimeZoneInfo.FindSystemTimeZoneById("India Standard Time");
+}
+
+
+@model List<Notification>
+
+
+<div class="container mt-4">
+    <div class="row align-items-center mb-3">
+        <div class="col-md-6">
+            <h2 class="mb-0">Notifications List</h2>
+        </div>
+
+
+        <div class="col-md-6 text-end">
+            <a asp-controller="Notification"
+               asp-action="CreateReport"
+               class="btn btn-primary">
+                <i class="bi bi-file-earmark-pdf"></i> Create Report
+            </a>
+        </div>
+
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-hover table-bordered align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th scope="col">Id</th>
+                    <th scope="col">Product Name</th>
+                    <th scope="col">Stock</th>
+                    <th scope="col">Time Created</th>
+                    <th scope="col" class="text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (Notification notificationItem in Model.OrderByDescending(i => i.TimeCreated))
+                {
+                    var indiaTime = TimeZoneInfo.ConvertTimeFromUtc(
+                    notificationItem.TimeCreated,
+                    indiaTimeZone
+                    ).ToString("dd-MMM-yyyy hh:mm tt");
+
+                    <tr id="notificationAll-@notificationItem.Id">
+                        <th scope="row">@notificationItem.Id</th>
+                        <td>@notificationItem.Product.Name</td>
+                        <td>@notificationItem.Product.Stock</td>
+                        <td>@indiaTime</td>
+                        <td class="text-center">
+                            <div class="d-flex justify-content-center gap-2">
+                                <a class="btn btn-danger btn-sm"
+                                   data-bs-notificationId="@notificationItem.Id"
+                                   data-bs-toggle="modal"
+                                   data-bs-target="#deleteNotificationModal">
+                                    <i class="bi bi-trash3 me-1"></i> Delete
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+
+<partial name="_bsNotificationDeleteModal" />
+
+
+<script>
+
+    const deleteNotificationModal = document.getElementById('deleteNotificationModal')
+    
+    let deleteNotificationbutton;
+    
+    if (deleteNotificationModal) {
+
+        
+
+        deleteNotificationModal.addEventListener('show.bs.modal', event => {
+
+            deleteNotificationbutton = event.relatedTarget
+
+            // const notificationId = button.getAttribute('data-bs-notificationId');
+        })
+
+    }
+
+        async function deleteNotification() 
+        {
+
+            const notificationId = deleteNotificationbutton.getAttribute('data-bs-notificationId');
+
+            const payload = {
+                NotificationId: notificationId
+            };
+
+            try {
+                const response = await fetch("/Notification/DeleteNotification/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) 
+                {
+                    throw new Error(`Server error: ${response.status}`);
+                }
+             
+                const row = document.getElementById(`notificationAll-${notificationId}`);
+                if (row) 
+                {
+                    row.style.opacity = '0.5'; // visually disable
+                    row.querySelectorAll('button').forEach(b => b.disabled = true);
+                }
+
+
+                const data = await response.json();
+                console.log("Server response:", data);
+
+                 //Close modal on success
+                const modal = bootstrap.Modal.getInstance(deleteNotificationModal);
+                modal.hide();
+
+
+            } catch (err) {
+                console.error("Notification deletion failed:", err);
+
+            }
+        }
+
+</script>

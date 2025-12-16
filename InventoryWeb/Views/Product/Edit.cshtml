@@ -1,0 +1,489 @@
+﻿@{
+    ViewData["Title"] = "Edit Product";
+}
+
+
+
+
+@model ProductVM
+
+
+@{
+    string imageUrl = string.IsNullOrEmpty(Model.Product.ImageUrl)
+                      ? Url.Content("~/images/product/default.jpg")
+                      : Url.Content(Model.Product.ImageUrl);
+
+    bool isDefault = imageUrl.EndsWith("default.jpg");
+}
+
+
+<style>
+    .image-wrapper {
+        display: inline-block;
+        position: relative;
+    }
+
+        .image-wrapper img {
+            max-height: 280px;
+            max-width: 100%;
+            object-fit: contain;
+        }
+
+    .image-overlay {
+        position: absolute;
+        inset: 0;
+        border-radius: 0.375rem;
+        background-color: rgba(0,0,0,0.45);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        opacity: 0;
+        transition: opacity 0.2s ease-in-out;
+    }
+
+    .image-wrapper:hover .image-overlay {
+        opacity: 1;
+    }
+
+    
+</style>
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6 col-md-8">
+
+            <div class="card bg-body shadow-sm">
+
+                <!-- Header -->
+                <div class="card-header bg-warning text-dark text-center">
+                    <h3 class="mb-0">Edit Product</h3>
+                </div>
+
+                <div class="card-body">
+
+                    <form method="post" enctype="multipart/form-data">
+
+                        <!-- Hidden fields -->
+                        <input asp-for="Product.Id" type="hidden" />
+                        <input asp-for="Product.ImageUrl" type="hidden" />
+                        <input asp-for="Product.Stock" type="hidden" />
+                        <input asp-for="Product.LastAdded" type="hidden" />
+                        <input asp-for="Product.LastRemoved" type="hidden" />
+                        <input type="hidden" id="DeleteImage" name="DeleteImage" value="false" />
+
+                        <!-- Image Preview -->
+                        @* <div class="mb-3 text-center">
+                            <img src="@(string.IsNullOrEmpty(Model.Product.ImageUrl)
+                                                                         ? Url.Content("~/images/product/default.jpg")
+                                                                         : Url.Content(Model.Product.ImageUrl))"
+                                 class="img-fluid rounded border"
+                                 style="max-height: 280px; object-fit: cover;" />
+                        </div> *@
+
+                        <div class="mb-3 text-center">
+
+                            <div class="image-container d-flex justify-content-center align-items-center">
+
+                                <div class="image-wrapper position-relative">
+
+                                    <img id="productImage"
+                                         src="@imageUrl"
+                                         class="img-fluid rounded border"
+                                         style="max-height: 280px;" />
+
+                                    @if (!isDefault)
+                                    {
+                                        <div class="image-overlay">
+                                            <button type="button"
+                                                    class="btn btn-danger btn-sm"
+                                                    id="toggleImageBtn">
+                                                <i class="bi bi-trash" id="toggleIcon"></i>
+                                            </button>
+                                        </div>
+                                    }
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <!-- Product Name -->
+                        <div class="mb-3">
+                            <label class="form-label">Product Name</label>
+                            <input type="text" class="form-control" asp-for="Product.Name">
+                            <span class="text-danger" asp-validation-for="Product.Name"></span>
+                        </div>
+
+                        <!-- Category -->
+                        <div class="mb-3">
+                            <label class="form-label">Category</label>
+                            <select asp-for="Product.CategoryId"
+                                    asp-items="@Model.CategoryList"
+                                    class="form-select">
+                                <option disabled selected value="">--Select Category--</option>
+                            </select>
+                            <span class="text-danger" asp-validation-for="Product.CategoryId"></span>
+                        </div>
+
+                        <!-- Price -->
+                        <div class="mb-3">
+                            <label class="form-label">Price</label>
+                            <input pattern="^\d+(\.\d{2})?$" type="text" class="form-control" asp-for="Product.Price">
+                            <span class="text-danger" asp-validation-for="Product.Price"></span>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" rows="3" asp-for="Product.Description"></textarea>
+                            <span class="text-danger" asp-validation-for="Product.Description"></span>
+                        </div>
+
+                        <!-- Image Upload -->
+                        <div class="mb-3">
+                            <label class="form-label">
+                                Select Image
+                                <button type="button"
+                                        class="btn btn-sm btn-info"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#imageInfoModal"
+                                        title="Image requirements">
+                                    <i class="bi bi-info-circle"></i>
+                                </button>
+
+                            </label>
+
+                            <div class="input-group">
+                                <input type="file"
+                                       class="form-control"
+                                       name="File"
+                                       id="fileInput"
+                                       accept=".jpg, .jpeg, .png, .webp">
+
+                                <button class="btn btn-outline-secondary" type="button" id="removeFileBtn">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </div>
+
+                            <div id="imageInfo"
+                                 class="mt-1 small text-muted"
+                                 style="display:none;">
+                            </div>
+
+                            <span asp-validation-for="File" class="text-danger" id="fileError"></span>
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="d-flex justify-content-between mt-4">
+                            <a asp-controller="Product" asp-action="Index" class="btn btn-secondary px-4">
+                                Back
+                            </a>
+
+                            @* <button type="submit" class="btn btn-warning px-4">
+                                Save Changes
+                            </button> *@
+                            <button type="button"
+                                    class="btn btn-warning px-4"
+                                    id="saveBtn">
+                                Save Changes
+                            </button>
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+
+@* ----------------------------BOOTSTRAP MODAL--------------------------------- *@
+<div class="modal fade" id="imageInfoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-dark">
+                <h5 class="modal-title">Image Requirements</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">
+                        <strong>Allowed formats:</strong> JPG, JPEG, PNG, WEBP
+                    </li>
+                    <li class="list-group-item">
+                        <strong>Max file size:</strong> 500 KB
+                    </li>
+                    <li class="list-group-item">
+                        <strong>Minimum dimensions:</strong> 400 × 400 px
+                    </li>
+                    <li class="list-group-item">
+                        <strong>Maximum dimensions:</strong> 2000 × 2000 px
+                    </li>
+                </ul>
+            </div>
+
+
+        </div>
+    </div>
+</div>
+@* ---------------------------------MODAL TO SUBMIT----------------------------------------------- *@
+<div class="modal fade" id="confirmSaveModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title">Confirm Changes</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                Are you sure you want to save these changes?
+                <br />
+                <span class="text-danger fw-semibold" id="deleteWarning" style="display:none;">
+                    This will permanently delete the existing product image.
+                </span>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary"
+                        data-bs-dismiss="modal">
+                    Cancel
+                </button>
+
+                <button type="button" class="btn btn-warning"
+                        id="confirmSaveBtn">
+                    Yes, Save
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+
+
+
+<script>
+
+    const fileInput = document.getElementById("fileInput");
+    const removeBtn = document.getElementById("removeFileBtn");
+    const fileError = document.getElementById("fileError");
+
+
+    const imageInfo = document.getElementById("imageInfo");
+
+    // Validation settings
+    const MAX_SIZE_KB = 200;
+    const MIN_WIDTH = 400, MIN_HEIGHT = 400;
+    const MAX_WIDTH = 2000, MAX_HEIGHT = 2000;
+    const ALLOWED_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp"];
+
+    // Handle file selection
+    fileInput.addEventListener("change", function () {
+        const file = fileInput.files[0];
+
+        fileError.textContent = "";
+        imageInfo.style.display = "none";
+
+        if (!file) return;
+
+        // 1️⃣ Extension check
+        const ext = file.name.substring(file.name.lastIndexOf(".")).toLowerCase();
+        if (!ALLOWED_EXTENSIONS.includes(ext)) {
+            fileError.textContent = "Only JPG, PNG, or WEBP images are allowed.";
+            return;
+        }
+
+
+
+        const sizeKB = (file.size / 1024).toFixed(1);
+        // 3️⃣ Dimensions & corruption check
+        const img = new Image();
+        img.onload = function () {
+
+            imageInfo.textContent =
+            `Size: ${sizeKB} KB | Dimensions: ${img.width} × ${img.height} px`;
+        imageInfo.style.display = "block";
+
+            // 2️⃣ Size check
+        if (file.size > MAX_SIZE_KB * 1024) {
+            fileError.textContent = `File too large (max ${MAX_SIZE_KB} KB).`;
+            // return;
+        }
+
+
+            if (
+                img.width < MIN_WIDTH || img.height < MIN_HEIGHT ||
+                img.width > MAX_WIDTH || img.height > MAX_HEIGHT
+            ) {
+                fileError.textContent =
+                    `Image dimensions must be between ${MIN_WIDTH}×${MIN_HEIGHT} and ${MAX_WIDTH}×${MAX_HEIGHT} pixels.`;
+            }
+        };
+        img.onerror = function () {
+            imageInfo.style.display = "none";
+            fileError.textContent = "Invalid or corrupted image file.";
+        };
+        img.src = URL.createObjectURL(file);
+    });
+
+    // Handle remove button
+    removeBtn.addEventListener("click", function () {
+        fileInput.value = "";
+        fileError.textContent = "";
+        imageInfo.style.display = "none";
+
+        if (selectedFileNameDiv) {
+            selectedFileNameDiv.style.display = "none";
+        }
+    });
+
+    // Prevent form submission if file has error
+    const form = fileInput.closest("form");
+    form.addEventListener("submit", function (e) {
+        if (fileError.textContent.trim() !== "") {
+            e.preventDefault();
+            // fileInput.classList.add("is-invalid"); Bootstrap highlight
+            fileInput.focus();
+        } else {
+            fileInput.classList.remove("is-invalid");
+        }
+    });
+
+</script>
+
+<script>
+    // Image delete Boolean logic
+    const productImage = document.getElementById("productImage");
+    const toggleBtn = document.getElementById("toggleImageBtn");
+    const toggleIcon = document.getElementById("toggleIcon");
+    const deleteInput = document.getElementById("DeleteImage"); // your existing hidden input
+
+    // Track deleted state
+    let isDeleted = false;
+
+    // Only attach logic if toggle button exists (i.e., not default.jpg)
+    if (toggleBtn) {
+
+        // Click event: toggle delete / undo
+        toggleBtn.addEventListener("click", function () {
+            if (!isDeleted) {
+                // Mark as deleted
+                productImage.style.opacity = 0.4; // Visual cue
+                toggleIcon.classList.remove("bi-trash");
+                toggleIcon.classList.add("bi-arrow-counterclockwise"); // Undo icon
+                isDeleted = true;
+                deleteInput.value = "true";
+            } else {
+                // Undo delete
+                productImage.style.opacity = 1;
+                toggleIcon.classList.remove("bi-arrow-counterclockwise");
+                toggleIcon.classList.add("bi-trash");
+                isDeleted = false;
+                deleteInput.value = "false";
+            }
+        });
+
+        // Optional: hide overlay if image changes to default dynamically
+        const observer = new MutationObserver(() => {
+            if (productImage.src.endsWith("default.jpg")) {
+                toggleBtn.style.display = "none";
+            } else {
+                toggleBtn.style.display = "flex";
+            }
+        });
+
+        observer.observe(productImage, { attributes: true, attributeFilter: ['src'] });
+    }
+
+</script>
+
+
+<script>
+
+        function focusFirstInvalidField(form) {
+
+        // 1️⃣ Normal ASP.NET / jQuery validation fields
+        const normalInvalid = form.querySelector(".input-validation-error");
+        if (normalInvalid) {
+            normalInvalid.focus();
+            normalInvalid.scrollIntoView({
+                behavior: "smooth",
+                block: "center"
+            });
+            return true;
+        }
+
+        // 2️⃣ Custom image validation
+        if (fileError.textContent.trim() !== "") {
+            fileInput.focus();
+            fileInput.scrollIntoView({
+                behavior: "smooth",
+                block: "center"
+            });
+            return true;
+        }
+
+        return false;
+    }
+
+
+    const saveBtn = document.getElementById("saveBtn");
+    const confirmSaveBtn = document.getElementById("confirmSaveBtn");
+    const editForm = saveBtn.closest("form");
+    const deleteInputModal = document.getElementById("DeleteImage");
+    const deleteWarning = document.getElementById("deleteWarning");
+
+         saveBtn.addEventListener("click", function () {
+
+        // Run jQuery validation first
+        if (!$(form).valid()) {
+            focusFirstInvalidField(form);
+            return;
+        }
+
+        // Then check image validation
+        if (focusFirstInvalidField(form)) {
+            return;
+        }
+
+        deleteWarning.style.display =
+            deleteInput.value === "true" ? "inline" : "none";
+
+        new bootstrap.Modal(
+            document.getElementById("confirmSaveModal")
+        ).show();
+    });
+
+
+
+
+            confirmSaveBtn.addEventListener("click", function () {
+
+        if (!$(form).valid()) {
+            focusFirstInvalidField(form);
+            return;
+        }
+
+        if (focusFirstInvalidField(form)) {
+            return;
+        }
+
+        form.submit();
+    });
+
+
+</script>

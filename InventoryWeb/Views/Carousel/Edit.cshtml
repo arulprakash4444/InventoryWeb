@@ -1,0 +1,874 @@
+﻿@Html.AntiForgeryToken()
+
+<style>
+    /* Wider column to fit image + input side-by-side */
+    .image-col-width {
+        width: 400px;
+        min-width: 350px;
+    }
+
+    /* 16:6 Aspect Ratio Container */
+    .thumb-preview-container {
+        width: 160px; /* Fixed width */
+        aspect-ratio: 16 / 6; /* Forces the 16:6 ratio */
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        overflow: hidden;
+        position: relative;
+        /* Flex positioning for the "No Image" text */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        /* CRITICAL: Prevents the box from shrinking when side-by-side with input */
+        flex-shrink: 0;
+    }
+
+        .thumb-preview-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* This mimics the carousel crop */
+            object-position: center;
+            display: block;
+        }
+
+    .no-img-text {
+        font-size: 11px;
+        color: #adb5bd;
+        font-weight: 500;
+        text-transform: uppercase;
+    }
+</style>
+
+<div class="container mt-4">
+    <div class="row align-items-center mb-3">
+        <div class="col-md-6">
+            <h2 class="mb-0">Carousel Mgmt</h2>
+        </div>
+       
+            <div class="col-md-6 text-end">
+            <button type="button" id="addRow" class="btn btn-primary mb-3">Add New</button>
+            </div>
+        
+    </div>
+
+
+
+
+<table class="table" id="carouselTable">
+    <thead>
+        <tr>
+            <th style="width:80px">Order</th>
+            <th>Image</th>
+            <th>Link</th>
+            <th>Caption</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody id="sortable">
+        @foreach (var item in Model)
+        {
+            <tr data-id="@item.Id">
+
+                <td class="handle-cell">
+                    <div class="drag-handle">
+                        <span class="order-number"></span>
+                        ☰
+                    </div>
+                </td>
+
+                @* <td class="image-col-width">
+                    <div class="d-flex align-items-center gap-3 image-cell"
+                            data-has-image="@(!string.IsNullOrEmpty(item.ImageUrl))">
+
+                        <div class="thumb-preview-container shadow-sm">
+                            @if (!string.IsNullOrEmpty(item.ImageUrl))
+                            {
+                                <img src="@item.ImageUrl" class="carousel-thumb-img" />
+                            }
+                            else
+                            {
+                                <span class="no-img-text">No Image</span>
+                                <img src="" class="carousel-thumb-img d-none" />
+                            }
+                        </div>
+
+                        <input type="file"
+                                class="form-control form-control-sm image-input"
+                                name="Image"
+                                accept="image/*" />
+                    </div>
+                </td> *@
+
+                    <td class="image-col-width">
+                        <div class="d-flex align-items-center gap-3 image-cell"
+                             data-has-image="@(!string.IsNullOrEmpty(item.ImageUrl))">
+
+                            <div class="thumb-preview-container shadow-sm">
+                                @if (!string.IsNullOrEmpty(item.ImageUrl))
+                                {
+                                    <img src="@item.ImageUrl"
+                                         data-original-src="@item.ImageUrl"
+                                         class="carousel-thumb-img" />
+                                    <span class="no-img-text d-none">No Image</span>
+                                }
+                                else
+                                {
+                                    <img src="" class="carousel-thumb-img d-none" />
+                                    <span class="no-img-text">No Image</span>
+                                }
+                            </div>
+
+                            <div class="input-group input-group-sm">
+                                <input type="file"
+                                       class="form-control image-input"
+                                       name="Image"
+                                       accept="image/*" />
+
+                                <button class="btn btn-outline-secondary clear-file" type="button" title="Clear selection">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </div>
+
+                        </div>
+                    </td>
+
+                <td>
+                    <input type="text"
+                           value="@item.Link"
+                           class="form-control link-input"
+                           name="Link"
+                           placeholder="Optional link" />
+                </td>
+
+                <td>
+                    <input type="text"
+                           value="@item.Caption"
+                           class="form-control caption-input"
+                           name="Caption"
+                           placeholder="Optional caption" />
+                </td>
+
+                <td>
+                    <button type="button" class="btn btn-danger delete">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+
+            </tr>
+        }
+    </tbody>
+</table>
+
+</div>
+
+<div class="container mt-4">
+    <div class="d-flex d-flex justify-content-end">
+        <button type="button" id="saveCarousel" class="btn btn-success" disabled>
+            Save Changes
+        </button>
+    </div>
+
+</div>
+
+@* ----------------------------------------------MODAL------------------------------------------ *@
+<div class="modal fade" id="confirmSaveModal" tabindex="-1" aria-labelledby="confirmSaveModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmSaveModalLabel">Confirm Save</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to save the changes?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" id="confirmSaveBtn">Yes, Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* --------------------------------------------------error modal--------------------------------------- *@
+<div class="modal fade" id="messageModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="messageModalTitle">Notice</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="messageModalBody">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@* 
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+}
+
+
+
+
+<script>
+    document.getElementById("addRow").addEventListener("click", function () {
+
+        if (!validateImagesAndFocus()) return;
+
+        const tbody = document.getElementById("sortable");
+        const rowCount = tbody.children.length + 1;
+
+        const row = document.createElement("tr");
+        row.dataset.id = 0;
+                row.innerHTML = `
+    <td class="handle-cell">
+        <div class="drag-handle">
+            <span class="order-number"></span>
+            ☰
+        </div>
+    </td>
+
+    <td>
+        <div class="d-flex align-items-center gap-2 image-cell"
+             data-has-image="false">
+            <input type="file"
+                   class="form-control image-input"
+                   name="Image" />
+        </div>
+    </td>
+
+    <td>
+        <input type="text"
+               class="form-control link-input"
+               name="Link"
+               placeholder="Optional link" />
+    </td>
+
+    <td>
+        <input type="text"
+               class="form-control caption-input"
+               name="Caption"
+               placeholder="Optional caption" />
+    </td>
+
+    <td>
+            <button type="button" class="btn btn-danger delete">
+        <i class="bi bi-trash"></i>
+    </button>
+    </td>
+    `;
+
+
+        tbody.appendChild(row);
+            updateOrderNumbers();
+    markDirty();
+    });
+</script>
+
+
+<script>
+           document.getElementById("sortable").addEventListener("click", function (e) {
+        const btn = e.target.closest(".delete");
+        if (!btn) return;
+
+        const row = btn.closest("tr");
+
+        const cell = row.querySelector(".image-cell");
+        const input = cell.querySelector(".image-input");
+        const hasThumbnail = cell.dataset.hasImage?.toLowerCase() === "true";
+
+        // If new row with no image, remove from DOM
+        // if (row.dataset.id == 0 && !hasThumbnail && input.files.length === 0) {
+        //     row.remove();
+        //     updateOrderNumbers();
+        //     markDirty();
+        //     return;
+        // }
+
+        // If the row is new, just remove it from DOM (doesn't matter if image is selected)
+    if (row.dataset.id == 0) {
+        row.remove();
+        updateOrderNumbers();
+        markDirty();
+        return;
+    }
+
+        const isDeleted = row.dataset.deleted === "true";
+
+        if (!isDeleted) {
+            // Soft delete
+            row.dataset.deleted = "true";
+            row.classList.add("soft-deleted");
+
+            btn.innerHTML = `<i class="bi bi-arrow-counterclockwise"></i>`; // undo icon
+            btn.classList.remove("btn-danger");
+            btn.classList.add("btn-primary");
+
+        } else {
+            // Undo delete
+            row.dataset.deleted = "false";
+            row.classList.remove("soft-deleted");
+
+            btn.innerHTML = `<i class="bi bi-trash"></i>`; // trash icon
+            btn.classList.remove("btn-primary");
+            btn.classList.add("btn-danger");
+        }
+
+        // Force button to look fully enabled
+        btn.disabled = false;            // ensure not disabled
+        btn.style.opacity = "1";         // remove any faded effect
+        btn.style.pointerEvents = "auto";
+        btn.style.cursor = "pointer";
+
+        // Fix icon color if needed
+        btn.querySelector("i").style.color = "inherit";
+
+        updateOrderNumbers();
+        markDirty();
+    });
+
+
+
+</script>
+
+
+
+
+
+<script>
+    document.getElementById("saveCarousel").addEventListener("click", async function () {
+
+        if (!validateImagesAndFocus()) return;
+
+
+        // show Bootstrap modal
+    const saveModal = new bootstrap.Modal(document.getElementById("confirmSaveModal"));
+    saveModal.show();
+
+    });
+
+
+
+        let isDirty = false;
+    const saveBtn = document.getElementById("saveCarousel");
+    saveBtn.disabled = true;
+
+    function markDirty() {
+        isDirty = true;
+        saveBtn.disabled = false;
+    }
+
+    document.getElementById("sortable").addEventListener("input", markDirty);
+    document.getElementById("sortable").addEventListener("change", markDirty);
+    document.getElementById("addRow").addEventListener("click", markDirty);
+</script>
+
+
+<script>
+document.getElementById("confirmSaveBtn").addEventListener("click", async function () {
+    const saveModalEl = document.getElementById("confirmSaveModal");
+    const saveModal = bootstrap.Modal.getInstance(saveModalEl);
+    saveModal.hide();
+
+    const rows = document.querySelectorAll("#sortable tr");
+    const formData = new FormData();
+
+    rows.forEach((row, index) => {
+        const isDeleted = row.dataset.deleted === "true";
+
+        formData.append(`Items[${index}].Id`, row.dataset.id || 0);
+        formData.append(`Items[${index}].Order`, index + 1);
+        formData.append(`Items[${index}].IsDeleted`, isDeleted);
+
+        if (isDeleted) return;
+
+        const link = row.querySelector(".link-input")?.value;
+        const caption = row.querySelector(".caption-input")?.value;
+        const image = row.querySelector(".image-input")?.files[0];
+
+        formData.append(`Items[${index}].Link`, link);
+        formData.append(`Items[${index}].Caption`, caption);
+
+        if (image) {
+            formData.append(`Items[${index}].Image`, image);
+        }
+    });
+
+    const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+    const response = await fetch("/Carousel/SaveAll", {
+        method: "POST",
+        headers: { "RequestVerificationToken": token },
+        body: formData
+    });
+
+    if (response.ok) {
+        alert("Carousel saved successfully");
+        isDirty = false;
+        saveBtn.disabled = true;
+        location.reload();
+    } else {
+        const text = await response.text();
+        alert(text || "Error saving carousel");
+    }
+});
+</script>
+
+
+
+
+<script>
+        window.addEventListener("beforeunload", function (e) {
+        if (!isDirty) return;
+        e.preventDefault();
+        e.returnValue = '';
+    });
+
+</script>
+
+
+
+
+<script>
+        function updateOrderNumbers() {
+        let order = 1;
+
+        document.querySelectorAll("#sortable tr").forEach(row => {
+            const badge = row.querySelector(".order-number");
+
+            if (row.dataset.deleted === "true") {
+                badge.textContent = "–";
+            } else {
+                badge.textContent = order++;
+            }
+        });
+    }
+
+
+    // document.addEventListener("DOMContentLoaded", updateOrderNumbers);
+</script>
+
+
+<script>
+    let sortable; // global
+
+    document.addEventListener("DOMContentLoaded", function() {
+        sortable = new Sortable(document.getElementById("sortable"), {
+            handle: ".drag-handle", // only drag by the icon
+            animation: 150,
+            onMove(evt) {
+                // prevent dragging soft-deleted rows
+                return evt.dragged.dataset.deleted !== "true";
+            },
+            onEnd() {
+                updateOrderNumbers();
+                markDirty();
+            }
+        });
+
+        updateOrderNumbers(); // initial order numbers
+    });
+</script>
+
+
+
+<script>
+    function validateImagesAndFocus() {
+        const rows = document.querySelectorAll("#sortable tr");
+
+        for (const row of rows) {
+            // Skip rows that are soft-deleted
+            if (row.dataset.deleted === "true") continue;
+
+            const cell = row.querySelector(".image-cell");
+            if (!cell) continue;
+
+            const hasThumbnail = cell.dataset.hasImage?.toLowerCase() === "true";
+            const input = cell.querySelector(".image-input");
+
+            // Validation only applies to non-deleted rows
+            if (!hasThumbnail && input.files.length === 0) {
+                input.focus();
+                return false; // stop validation if image missing
+            }
+        }
+
+        return true; // all rows valid
+    }
+
+</script>
+
+<script>
+    document.getElementById("sortable").addEventListener("change", function (e) {
+        if (e.target.classList.contains("image-input")) {
+            const cell = e.target.closest(".image-cell");
+            cell.dataset.hasImage = "true";
+        }
+    });
+</script> *@
+
+<script>
+    // ==========================================
+    // 1. GLOBAL VARIABLES & STATE MANAGEMENT
+    // ==========================================
+    let originalState = [];
+    let sortableInstance;
+    const saveBtn = document.getElementById("saveCarousel");
+    const tableBody = document.getElementById("sortable");
+
+    // Helper: Show Bootstrap Modal Message
+    function showMessage(title, message) {
+        document.getElementById("messageModalTitle").textContent = title;
+        document.getElementById("messageModalBody").textContent = message;
+        new bootstrap.Modal(document.getElementById("messageModal")).show();
+    }
+
+    // Helper: Extract data snapshot from a row
+    function getRowData(row) {
+        return {
+            id: row.dataset.id,
+            link: row.querySelector(".link-input")?.value || "",
+            caption: row.querySelector(".caption-input")?.value || "",
+            isDeleted: row.dataset.deleted === "true",
+            // We track if a file input has a file selected
+            hasNewFile: row.querySelector(".image-input")?.files.length > 0
+        };
+    }
+
+    // Helper: Get snapshot of entire table
+    function getCurrentState() {
+        const rows = document.querySelectorAll("#sortable tr");
+        return Array.from(rows).map(row => getRowData(row));
+    }
+
+    // Core Logic: Compare Current State vs Original Snapshot
+    function checkForChanges() {
+        const currentState = getCurrentState();
+
+        // Check 1: Row count mismatch
+        if (currentState.length !== originalState.length) {
+            toggleSaveButton(true);
+            return;
+        }
+
+        let isDirty = false;
+
+        for (let i = 0; i < originalState.length; i++) {
+            const original = originalState[i];
+            const current = currentState[i];
+
+            // Check 2: Order/ID mismatch
+            if (original.id !== current.id) { isDirty = true; break; }
+
+            // Check 3: Content mismatch
+            if (original.link !== current.link || original.caption !== current.caption) { isDirty = true; break; }
+
+            // Check 4: Soft delete status mismatch
+            if (original.isDeleted !== current.isDeleted) { isDirty = true; break; }
+
+            // Check 5: New file selected
+            if (current.hasNewFile) { isDirty = true; break; }
+        }
+
+        // Check 6: Safety check for unsaved "New" rows (ID 0)
+        if (currentState.some(x => x.id === "0")) isDirty = true;
+
+        toggleSaveButton(isDirty);
+    }
+
+    function toggleSaveButton(enable) {
+        saveBtn.disabled = !enable;
+        window.isDirtyGlobal = enable; // For beforeunload check
+    }
+
+    // ==========================================
+    // 2. INITIALIZATION
+    // ==========================================
+    document.addEventListener("DOMContentLoaded", function () {
+        // 1. Take snapshot of server data
+        originalState = getCurrentState();
+
+        // 2. Init SortableJS
+        sortableInstance = new Sortable(tableBody, {
+            handle: ".drag-handle",
+            animation: 150,
+            onMove(evt) { return evt.dragged.dataset.deleted !== "true"; },
+            onEnd() {
+                updateOrderNumbers();
+                checkForChanges();
+            }
+        });
+
+        updateOrderNumbers();
+
+        // 3. Ensure button state is correct on load
+        checkForChanges();
+    });
+
+    // ==========================================
+    // 3. IMAGE HANDLING (Preview & Clear)
+    // ==========================================
+
+    // Handle File Selection (Show Preview)
+    tableBody.addEventListener("change", function (e) {
+        if (!e.target.classList.contains("image-input")) return;
+
+        const input = e.target;
+        const cell = input.closest(".image-cell");
+        const img = cell.querySelector(".carousel-thumb-img");
+        const noImgText = cell.querySelector(".no-img-text");
+
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            const newUrl = URL.createObjectURL(file);
+
+            img.src = newUrl;
+            img.classList.remove("d-none");
+            if (noImgText) noImgText.classList.add("d-none");
+
+            // Mark cell as having image
+            cell.dataset.hasImage = "true";
+
+            // Cleanup memory later
+            img.onload = () => URL.revokeObjectURL(newUrl);
+        }
+        checkForChanges();
+    });
+
+    // Handle Clear Button (Revert Preview)
+    tableBody.addEventListener("click", function (e) {
+        const btn = e.target.closest(".clear-file");
+        if (!btn) return;
+
+        const cell = btn.closest(".image-cell");
+        const input = cell.querySelector(".image-input");
+        const img = cell.querySelector(".carousel-thumb-img");
+        const noImgText = cell.querySelector(".no-img-text");
+
+        // Clear the file input
+        input.value = "";
+
+        // Revert Logic
+        const originalSrc = img.dataset.originalSrc;
+
+        if (originalSrc) {
+            // Revert to saved server image
+            img.src = originalSrc;
+            img.classList.remove("d-none");
+            if (noImgText) noImgText.classList.add("d-none");
+            cell.dataset.hasImage = "true";
+        } else {
+            // Revert to blank (for new rows or rows that had no image)
+            img.src = "";
+            img.classList.add("d-none");
+            if (noImgText) noImgText.classList.remove("d-none");
+            cell.dataset.hasImage = "false";
+        }
+
+        checkForChanges();
+    });
+
+
+    // ==========================================
+    // 4. ROW OPERATIONS (Add, Delete, Input)
+    // ==========================================
+
+    // Monitor text inputs
+    tableBody.addEventListener("input", function (e) {
+        if (e.target.classList.contains("link-input") || e.target.classList.contains("caption-input")) {
+            checkForChanges();
+        }
+    });
+
+    // Add Row
+    document.getElementById("addRow").addEventListener("click", function () {
+        if (!validateImagesAndFocus()) return;
+
+        const row = document.createElement("tr");
+        row.dataset.id = 0;
+        row.dataset.deleted = "false";
+
+        // Note: This HTML matches the "Side-by-Side + Input Group" structure
+        row.innerHTML = `
+            <td class="handle-cell">
+                <div class="drag-handle"><span class="order-number"></span> ☰</div>
+            </td>
+
+            <td class="image-col-width">
+                <div class="d-flex align-items-center gap-3 image-cell" data-has-image="false">
+
+                    <div class="thumb-preview-container shadow-sm">
+                         <span class="no-img-text">New</span>
+                         <img src="" class="carousel-thumb-img d-none" />
+                    </div>
+
+                    <div class="input-group input-group-sm">
+                        <input type="file"
+                               class="form-control image-input"
+                               name="Image"
+                               accept="image/*" />
+
+                        <button class="btn btn-outline-secondary clear-file" type="button" title="Clear selection">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+                </div>
+            </td>
+
+            <td>
+                <input type="text" class="form-control link-input" name="Link" placeholder="Optional link" />
+            </td>
+
+            <td>
+                <input type="text" class="form-control caption-input" name="Caption" placeholder="Optional caption" />
+            </td>
+
+            <td>
+                <button type="button" class="btn btn-danger delete">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </td>
+        `;
+
+        tableBody.appendChild(row);
+        updateOrderNumbers();
+        checkForChanges();
+    });
+
+    // Delete / Undo
+    tableBody.addEventListener("click", function (e) {
+        const btn = e.target.closest(".delete");
+        if (!btn) return;
+
+        const row = btn.closest("tr");
+
+        // Permanently remove unsaved new rows
+        if (row.dataset.id == 0) {
+            row.remove();
+            updateOrderNumbers();
+            checkForChanges();
+            return;
+        }
+
+        // Toggle Soft Delete
+        const isDeleted = row.dataset.deleted === "true";
+        if (!isDeleted) {
+            row.dataset.deleted = "true";
+            row.classList.add("soft-deleted");
+            btn.innerHTML = `<i class="bi bi-arrow-counterclockwise"></i>`;
+            btn.classList.replace("btn-danger", "btn-primary");
+        } else {
+            row.dataset.deleted = "false";
+            row.classList.remove("soft-deleted");
+            btn.innerHTML = `<i class="bi bi-trash"></i>`;
+            btn.classList.replace("btn-primary", "btn-danger");
+        }
+
+        btn.blur();
+        updateOrderNumbers();
+        checkForChanges();
+    });
+
+    // ==========================================
+    // 5. VALIDATION & UTILS
+    // ==========================================
+    function validateImagesAndFocus() {
+        const rows = document.querySelectorAll("#sortable tr");
+        for (const row of rows) {
+            if (row.dataset.deleted === "true") continue;
+
+            const cell = row.querySelector(".image-cell");
+            const hasThumbnail = cell.dataset.hasImage?.toLowerCase() === "true";
+            const input = cell.querySelector(".image-input");
+
+            if (!hasThumbnail && input.files.length === 0) {
+                showMessage("Validation Error", "Please select an image for all active rows.");
+                input.focus();
+                return false;
+            }
+        }
+        return true;
+    }
+
+    function updateOrderNumbers() {
+        let order = 1;
+        document.querySelectorAll("#sortable tr").forEach(row => {
+            const badge = row.querySelector(".order-number");
+            badge.textContent = (row.dataset.deleted === "true") ? "–" : order++;
+        });
+    }
+
+    window.addEventListener("beforeunload", function (e) {
+        if (window.isDirtyGlobal) {
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    });
+
+    // ==========================================
+    // 6. SAVING (Modal & AJAX)
+    // ==========================================
+
+    // Open Confirmation Modal
+    saveBtn.addEventListener("click", function () {
+        if (!validateImagesAndFocus()) return;
+        const saveModal = new bootstrap.Modal(document.getElementById("confirmSaveModal"));
+        saveModal.show();
+    });
+
+    // Handle "Yes, Save"
+    document.getElementById("confirmSaveBtn").addEventListener("click", async function () {
+        // Hide Confirmation Modal
+        const saveModalEl = document.getElementById("confirmSaveModal");
+        const saveModal = bootstrap.Modal.getInstance(saveModalEl);
+        saveModal.hide();
+
+        const rows = document.querySelectorAll("#sortable tr");
+        const formData = new FormData();
+
+        rows.forEach((row, index) => {
+            const isDeleted = row.dataset.deleted === "true";
+
+            formData.append(`Items[${index}].Id`, row.dataset.id || 0);
+            formData.append(`Items[${index}].Order`, index + 1);
+            formData.append(`Items[${index}].IsDeleted`, isDeleted);
+
+            if (isDeleted) return;
+
+            const link = row.querySelector(".link-input")?.value;
+            const caption = row.querySelector(".caption-input")?.value;
+            const image = row.querySelector(".image-input")?.files[0];
+
+            formData.append(`Items[${index}].Link`, link);
+            formData.append(`Items[${index}].Caption`, caption);
+            if (image) formData.append(`Items[${index}].Image`, image);
+        });
+
+        const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+        const token = tokenInput ? tokenInput.value : "";
+
+        try {
+            const response = await fetch("/Carousel/SaveAll", {
+                method: "POST",
+                headers: { "RequestVerificationToken": token },
+                body: formData
+            });
+
+            if (response.ok) {
+                window.isDirtyGlobal = false;
+                location.reload();
+            } else {
+                const text = await response.text();
+                showMessage("Save Failed", text || "An unknown error occurred.");
+            }
+        } catch (err) {
+            console.error(err);
+            showMessage("Error", "A network error occurred while saving.");
+        }
+    });
+</script>

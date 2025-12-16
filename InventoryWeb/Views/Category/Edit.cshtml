@@ -1,0 +1,136 @@
+﻿@{
+    ViewData["Title"] = "Edit Category";
+}
+
+@model Category
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-5 col-md-7">
+
+            <div class="card bg-body shadow-sm">
+
+                <!-- Header -->
+                <div class="card-header bg-warning text-dark text-center">
+                    <h3 class="mb-0">Edit Category</h3>
+                </div>
+
+                <div class="card-body">
+
+                    <form method="post">
+
+                        <!-- Hidden ID -->
+                        <input asp-for="Id" type="hidden" />
+
+                        <!-- Category Name -->
+                        <div class="mb-3">
+                            <label class="form-label">Category Name</label>
+                            <input type="text" class="form-control" asp-for="Name" />
+                            <span class="text-danger" asp-validation-for="Name"></span>
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="d-flex justify-content-between mt-4">
+                            <a asp-controller="Category" asp-action="Index" class="btn btn-secondary px-4">
+                                Back
+                            </a>
+
+                            @* <button type="submit" class="btn btn-warning px-4">
+                                Save Changes
+                            </button> *@
+
+                            <button type="button"
+                                    class="btn btn-warning px-4"
+                                    id="saveBtn">
+                                Save Changes
+                            </button>
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+@* ---------------------------------------------------BOOTSTRAP MODAL----------------------- *@
+<div class="modal fade" id="confirmSaveModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title">Confirm Changes</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                Are you sure you want to save these changes?
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary"
+                        data-bs-dismiss="modal">
+                    Cancel
+                </button>
+
+                <button type="button" class="btn btn-warning"
+                        id="confirmSaveBtn">
+                    Yes, Save
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+
+
+<script>
+    const saveBtn = document.getElementById("saveBtn");
+    const confirmSaveBtn = document.getElementById("confirmSaveBtn");
+    const form = saveBtn.closest("form");
+
+    function focusFirstInvalid(form) {
+        const firstError = form.querySelector(".input-validation-error");
+        if (firstError) {
+            firstError.focus();
+            firstError.scrollIntoView({
+                behavior: "smooth",
+                block: "center"
+            });
+        }
+    }
+
+    saveBtn.addEventListener("click", function () {
+
+        // Run client-side validation
+        if (!$(form).valid()) {
+            focusFirstInvalid(form);
+            return;
+        }
+
+        new bootstrap.Modal(
+            document.getElementById("confirmSaveModal")
+        ).show();
+    });
+
+    confirmSaveBtn.addEventListener("click", function () {
+
+        if (!$(form).valid()) {
+            focusFirstInvalid(form);
+            return;
+        }
+
+        form.submit();
+    });
+</script>

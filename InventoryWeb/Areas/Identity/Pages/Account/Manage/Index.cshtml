@@ -1,0 +1,132 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Profile";
+    ViewData["ActivePage"] = ManageNavPages.Index;
+}
+
+<h3>@ViewData["Title"]</h3>
+<partial name="_StatusMessage" for="StatusMessage" />
+<div class="row mt-4">
+    <div class="col-md-6">
+        <form id="profile-form" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+
+
+
+            <div class="mb-3">
+                <label class="form-label">Username</label>
+                <input asp-for="Username" class="form-control" placeholder="Please choose your username." disabled />
+            </div>
+
+
+            <div class="mb-3">
+                <label asp-for="Input.Name" class="form-label"></label>
+                <input asp-for="Input.Name" class="form-control" placeholder="Please enter your name." />
+                <span asp-validation-for="Input.Name" class="text-danger"></span>
+            </div>
+
+
+            <div class="mb-3">
+                <label asp-for="Input.PhoneNumber" class="form-label"></label>
+                <input asp-for="Input.PhoneNumber" class="form-control mobileInput" placeholder="Please enter your phone number." maxlength="10"/>
+                <span asp-validation-for="Input.PhoneNumber" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Input.Address" class="form-label"></label>
+                <input asp-for="Input.Address" class="form-control" placeholder="Please enter your address." />
+                <span asp-validation-for="Input.Address" class="text-danger"></span>
+            </div>
+
+
+            @* <button id="update-profile-button" type="submit" class="w-100 btn btn-lg btn-primary">Save</button> *@
+            <button id="update-profile-button"
+                    type="button"
+                    class="w-100 btn btn-lg btn-primary mt-2">
+                Save
+            </button>
+
+        </form>
+    </div>
+</div>
+
+@* -----------------------------------MODAL----------------- *@
+<div class="modal fade" id="confirmProfileModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Confirm Profile Update</h5>
+                <button type="button"
+                        class="btn-close btn-close-white"
+                        data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                Are you sure you want to save these profile changes?
+            </div>
+
+            <div class="modal-footer">
+                <button type="button"
+                        class="btn btn-secondary"
+                        data-bs-dismiss="modal">
+                    Cancel
+                </button>
+
+                <button type="button"
+                        class="btn btn-primary"
+                        id="confirmProfileSaveBtn">
+                    Yes, Save
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+
+
+<script>
+    const saveBtn = document.getElementById("update-profile-button");
+    const confirmBtn = document.getElementById("confirmProfileSaveBtn");
+    const form = document.getElementById("profile-form");
+
+    function focusFirstInvalid(form) {
+        const invalid = form.querySelector(".input-validation-error");
+        if (invalid) {
+            invalid.focus();
+            invalid.scrollIntoView({
+                behavior: "smooth",
+                block: "center"
+            });
+        }
+    }
+
+    saveBtn.addEventListener("click", function () {
+
+        if (!$(form).valid()) {
+            focusFirstInvalid(form);
+            return;
+        }
+
+        new bootstrap.Modal(
+            document.getElementById("confirmProfileModal")
+        ).show();
+    });
+
+    confirmBtn.addEventListener("click", function () {
+
+        if (!$(form).valid()) {
+            focusFirstInvalid(form);
+            return;
+        }
+
+        form.submit();
+    });
+</script>

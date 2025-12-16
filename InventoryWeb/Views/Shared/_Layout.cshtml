@@ -1,0 +1,279 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - InventoryWeb</title>
+
+    @* <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" /> *@
+
+
+    <!-- 🔑 MUST be first -->
+    <script>
+        (function () {
+            const stored = localStorage.getItem("theme");
+            const systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+            const theme = stored ?? (systemDark ? "dark" : "light");
+            document.documentElement.setAttribute("data-bs-theme", theme);
+        })();
+    </script>
+
+
+    @* Bootstrap 5 *@
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/InventoryWeb.styles.css" asp-append-version="true" />
+
+    <!-- Theme toggle logic (safe to defer) -->
+    <script defer>
+        function updateIcon(theme) {
+            const toggleIcon = document.getElementById("mtoggle");
+            if (!toggleIcon) return;
+
+            toggleIcon.classList.remove("bi-moon", "bi-sun");
+            toggleIcon.classList.add(theme === "light" ? "bi-moon" : "bi-sun");
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute("data-bs-theme") || "light";
+            const newTheme = currentTheme === "dark" ? "light" : "dark";
+
+            html.setAttribute("data-bs-theme", newTheme);
+            localStorage.setItem("theme", newTheme);
+            updateIcon(newTheme);
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            updateIcon(document.documentElement.getAttribute("data-bs-theme"));
+        });
+    </script>
+    
+</head>
+@* <body> *@
+<body class="d-flex flex-column min-vh-100">
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm bg-body-tertiary border-bottom box-shadow mb-3">
+            <div class="container-fluid">
+                <a class="navbar-brand text-uppercase fw-medium" asp-area="" asp-controller="Home" asp-action="Index">InvMgmt</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+
+                   
+
+
+                        <ul class="navbar-nav flex-grow-1 me-auto">
+                        @if (User.Identity != null && User.Identity.IsAuthenticated)
+                        {
+
+                            @if (User.IsInRole(SD.Role_Admin))
+                            {
+
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-area="" asp-controller="Dashboard" asp-action="Index">Dashboard</a>
+                                </li>
+
+                            }
+
+
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="" asp-controller="Product" asp-action="Index">Products</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="" asp-controller="Category" asp-action="Index">Categories</a>
+                            </li>
+
+                            @if (User.IsInRole(SD.Role_Admin))
+                            {
+
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-area="" asp-controller="Notification" asp-action="Index">Notifications</a>
+                                </li>
+
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-area="" asp-controller="ApplicationUser" asp-action="Index">Users</a>
+                                </li>
+
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-area="" asp-controller="Carousel" asp-action="Edit">Carousel</a>
+                                </li>
+
+                            }
+                        }
+                        </ul>
+
+                   
+
+                    <partial name="_LoginPartial"/>
+
+
+                </div>
+            </div>
+        </nav>
+    </header>
+    <div class="container mb-4">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    @* <footer class="border-top footer text-muted">
+        <div class="container">
+            &copy; 2025 - Inventory.Web - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+        </div>
+    </footer> *@
+
+    <footer class="bg-body py-5 mt-auto border-top">
+        <div class="container">
+            <div class="row mb-4 border-bottom pb-4">
+                <div class="col-12 text-center text-md-start">
+                    <img src="~/images/footerImage/Niclogo.png" asp-append-version="true" alt="Nic Logo" class="mb-3 theme-adaptive-logo" style="height: 80px;" />
+                    <h5 class="text-uppercase fw-bold mb-1">Puducherry UT</h5>
+                    <h6 class="text-body-secondary">Ministry of Electronics and Information Technology, Government of India</h6>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <h6 class="text-uppercase fw-bold mb-3">Office address</h6>
+                    <address class="small text-body-secondary">
+                        A Block, 4th Floor,<br />
+                        Chief Secretariat,<br />
+                        Pondicherry, Puducherry UT 605001<br />
+                        Phone: +91 – 413 – 2336675
+                    </address>
+                </div>
+
+                <div class="col-md-4 mb-4">
+                    <h6 class="text-uppercase fw-bold mb-3">Quick Links</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <a asp-controller="Home" asp-action="Index" class="text-body-secondary text-decoration-none link-primary">Home</a>
+                        </li>
+                        <li class="mb-2">
+                            <a asp-controller="Inventory" asp-action="Dashboard" class="text-body-secondary text-decoration-none link-primary">Dashboard</a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="#" class="text-body-secondary text-decoration-none link-primary">RTI / Public Grievances</a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="col-md-4 mb-4">
+                    <h6 class="text-uppercase fw-bold mb-3">Legal</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <a asp-controller="Home" asp-action="Privacy" class="text-body-secondary text-decoration-none link-primary">Privacy Policy</a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="#" class="text-body-secondary text-decoration-none link-primary">Terms & Conditions</a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="#" class="text-body-secondary text-decoration-none link-primary">Accessibility Statement</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="row pt-3 border-top">
+                <div class="col-md-6 text-center text-md-start">
+                    <p class="small text-body-secondary mb-0">
+                        &copy; @DateTime.Now.Year - INVMGMT | Official Portal
+                    </p>
+                </div>
+                <div class="col-md-6 text-center text-md-end">
+                    <p class="small text-body-secondary mb-0">Page serviced at: @DateTime.Now.ToString("dd MMM yyyy - hh:mm tt")</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    @* <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script> *@
+    <script src="~/js/site.js"></script>
+
+    @* Bootstrap 5 *@
+    @* <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script> *@
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+
+
+
+
+    <script>
+        (function () {
+            const KEY = "single_active_tab";
+            const tabId = crypto.randomUUID();
+            const myStamp = Date.now();
+
+            // Save this tab's identity in sessionStorage
+            sessionStorage.setItem(KEY, tabId);
+
+            // Write active tab info to localStorage
+            localStorage.setItem(KEY, JSON.stringify({
+                tabId: tabId,
+                timestamp: myStamp
+            }));
+
+            let blocked = false;
+
+            function freezeTab() {
+                if (blocked) return;
+                blocked = true;
+                window.location.href = "/Home/BlockedTab";
+            }
+
+            window.addEventListener("storage", function (event) {
+                if (event.key !== KEY) return;
+
+                let data;
+                try {
+                    data = JSON.parse(event.newValue);
+                } catch {
+                    return;
+                }
+
+                if (!data) return;
+
+                const otherTab = data.tabId;
+
+                // If another tab became active - block this one
+                if (otherTab !== tabId) {
+                    freezeTab();
+                }
+            });
+        })();
+    </script>
+
+
+    <script>
+                  const inputs = document.getElementsByClassName("mobileInput");
+
+        Array.from(inputs).forEach(input => {
+            input.addEventListener("input", function () {
+                this.value = this.value.replace(/\D/g, "").slice(0, 10);
+            });
+
+            input.addEventListener("keypress", function (e) {
+                if (!/[0-9]/.test(e.key) || this.value.length >= 10) {
+                    e.preventDefault();
+                }
+            });
+        });
+    </script>
+
+    
+
+</body>
+</html>

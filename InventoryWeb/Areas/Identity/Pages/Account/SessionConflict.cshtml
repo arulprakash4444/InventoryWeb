@@ -1,0 +1,39 @@
+﻿@page
+@model InventoryWeb.Areas.Identity.Pages.Account.SessionConflictModel
+@{
+}
+
+
+<div class="container mt-5">
+    <div class="card bg-body p-4">
+        <h3 class="text-danger">Multiple Login Detected</h3>
+        <p>Your account is already logged in on another device or browser.</p>
+        <p>Do you want to continue here?</p>
+
+        <form method="post">
+            @* Value="ok" processes the login *@
+            <button type="submit" name="choice" value="ok" class="btn btn-primary">OK</button>
+
+            @* Value="cancel" clears the data *@
+            <button type="submit" name="choice" value="cancel" class="btn btn-secondary">Cancel</button>
+        </form>
+    </div>
+</div>
+
+
+@* <script>
+    // 1️⃣ Replace history entry so back button skips this page
+    if (window.history.replaceState) {
+        window.history.replaceState(null, '', window.location.href);
+    }
+
+    // 2️⃣ Disable BFCache (forces full reload)
+    window.addEventListener("unload", function () {});
+
+    // 3️⃣ Redirect if restored from BFCache
+    window.addEventListener("pageshow", function(e) {
+        if (e.persisted) {
+            window.location.replace("/Identity/Account/Login");
+        }
+    });
+</script> *@

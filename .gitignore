@@ -1,0 +1,18 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+*.DS_Store
+
+# Visual Studio
+.vs/
+*.vscode/
+
+# NuGet
+*.nupkg
+packages/
+
+# Docker
+docker-compose.override.yml
+.env

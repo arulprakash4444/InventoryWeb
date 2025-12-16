@@ -1,0 +1,214 @@
+
+
+/* default (light mode) variables */
+:root {
+    --app-bg: #f8f9fa;
+    --app-text: #111827;
+    --app-card-bg: #ffffff;
+    --app-border: #e5e7eb;
+}
+
+/* dark mode overrides */
+[data-bs-theme="dark"] {
+    --app-bg: #121212;
+    --app-text: #ffffff;
+    --app-card-bg: #1e1e1e;
+    --app-border: #333333;
+}
+
+/* Apply variables globally */
+body {
+    background-color: var(--app-bg);
+    color: var(--app-text);
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.card {
+    background-color: var(--app-card-bg);
+    border-color: var(--app-border);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+/*body {
+  margin-bottom: 60px;
+}*/
+
+
+/*-------------------------------------------------------EDIT PRODUCT, IMAGEHOVER */
+/*.image-wrapper {
+    display: inline-block;
+    position: relative;
+}
+
+.image-wrapper img {
+    max-height: 280px;
+    max-width: 100%;
+    object-fit: contain;
+}
+
+.image-overlay {
+    position: absolute;
+    inset: 0;
+    border-radius: 0.375rem;
+    background-color: rgba(0,0,0,0.45);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+}
+
+.image-wrapper:hover .image-overlay {
+    opacity: 1;
+}
+*/
+
+
+
+/*---------------------------------------carousel thumbnail----------------------------*/
+.carousel-thumb {
+    width: 80px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+}
+
+
+
+
+/*------------------------------------------------*/
+/*.handle-cell {
+    width: 80px;
+    text-align: center;
+}
+
+.drag-handle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 40px;
+    cursor: grab;
+    background: #f8f9fa;
+    border: 1px dashed #ccc;
+    border-radius: 6px;
+    user-select: none;
+}
+
+.drag-handle:active {
+    cursor: grabbing;
+}
+
+#carouselTable td {
+    vertical-align: middle;
+}
+
+tr:hover .drag-handle {
+    background-color: #e9ecef;
+    color: #000;
+}*/
+
+
+/*--------------------number with badge in carousel admin--------------------------------*/
+/*.order-number {
+    background: #0d6efd;
+    color: white;
+    border-radius: 12px;
+    padding: 2px 8px;
+    font-size: 12px;
+}*/
+
+
+.handle-cell {
+    width: 80px;
+    text-align: center;
+}
+
+.drag-handle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 40px;
+    cursor: grab;
+    /* CHANGED: Replaced #f8f9fa with Adaptive Background */
+    background-color: var(--bs-tertiary-bg);
+    /* CHANGED: Replaced #ccc with Adaptive Border */
+    border: 1px dashed var(--bs-border-color);
+    /* ADDED: Ensure the icon/text adapts (e.g., black in light, white in dark) */
+    color: var(--bs-body-color);
+    border-radius: 6px;
+    user-select: none;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+    .drag-handle:active {
+        cursor: grabbing;
+    }
+
+#carouselTable td {
+    vertical-align: middle;
+}
+
+/* Hover Effects */
+tr:hover .drag-handle {
+    /* CHANGED: Replaced #e9ecef with Adaptive Hover Background */
+    background-color: var(--bs-secondary-bg);
+    /* CHANGED: Replaced #000 with Adaptive Emphasis Color */
+    color: var(--bs-emphasis-color);
+    border-color: var(--bs-border-color-translucent);
+}
+
+/*--------------------number with badge in carousel admin--------------------------------*/
+.order-number {
+    /* OPTIONAL: Use var(--bs-primary) so it matches if you change your theme color later */
+    background: var(--bs-primary);
+    color: white;
+    border-radius: 12px;
+    padding: 2px 8px;
+    font-size: 12px;
+}
+
+/*-------------------------------------------------------------*/
+.soft-deleted {
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+.soft-deleted .delete {
+    pointer-events: auto; /* allow Undo click */
+}
+
+tr.soft-deleted .delete {
+    opacity: 1 !important;
+}

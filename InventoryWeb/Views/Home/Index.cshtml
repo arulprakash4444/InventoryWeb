@@ -1,0 +1,270 @@
+﻿@{
+    ViewData["Title"] = "Home";
+}
+
+@model IEnumerable<Inventory.Models.CarouselItem>
+
+
+<style>
+    /* ===== Carousel container ===== */
+    .carousel-rounded {
+        border-radius: 16px;
+        overflow: hidden;
+        background: #fff;
+    }
+
+    /* Maintain aspect ratio */
+    .carousel-rounded .carousel-item {
+        aspect-ratio: 16 / 6;
+    }
+
+    .carousel-rounded .carousel-item img {
+        height: 100%;
+        object-fit: cover;
+    }
+
+    /* ===== Hide indicators ===== */
+    .carousel-indicators {
+        display: none;
+    }
+
+    /* ===== Image counter ===== */
+    .carousel-counter {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        background: rgba(0, 0, 0, 0.6);
+        color: #fff;
+        padding: 4px 10px;
+        font-size: 0.85rem;
+        border-radius: 999px;
+        z-index: 10;
+        pointer-events: none;
+    }
+
+    /* ===== Outside caption ===== */
+    .carousel-caption-outside {
+        margin-top: 8px;
+        text-align: center;
+        font-size: 0.9rem;
+        color: #6b6b6b;
+        font-style: italic;
+    }
+
+    /* ===== Carousel arrows ===== */
+    .carousel-control-prev,
+    .carousel-control-next {
+        width: 48px;
+        height: 48px;
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(0, 0, 0, 0.6);
+        border-radius: 999px;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+    }
+
+    /* Arrow icons */
+    .carousel-control-prev-icon,
+    .carousel-control-next-icon {
+        background-size: 60% 60%;
+    }
+
+    /* Positioning */
+    .carousel-control-prev {
+        left: 12px;
+    }
+
+    .carousel-control-next {
+        right: 12px;
+    }
+
+    /* Show arrows on hover */
+    .carousel-rounded:hover .carousel-control-prev,
+    .carousel-rounded:hover .carousel-control-next {
+        opacity: 0.9;
+    }
+
+    /* Show arrows for keyboard users only */
+    .carousel-control-prev:focus-visible,
+    .carousel-control-next:focus-visible {
+        opacity: 0.9;
+    }
+
+    /* Remove persistent focus styling */
+    .carousel-control-prev:focus,
+    .carousel-control-next:focus {
+        box-shadow: none;
+    }
+
+    /* Strong hover feedback */
+    .carousel-control-prev:hover,
+    .carousel-control-next:hover {
+        opacity: 1;
+    }
+
+
+</style>
+
+
+<div class="container mt-5">
+
+    <div class="text-center mb-5">
+        <h1 class="display-4 text-primary">Welcome to Inventory Management</h1>
+    </div>
+
+    <!-- Carousel CARD -->
+    <div id="homeCarousel"
+         class="carousel slide carousel-rounded shadow-sm mb-4"
+         data-bs-ride="carousel">
+
+        <!-- STATIC counter -->
+        <div class="carousel-counter" id="carouselCounter">
+            1 / @Model.Count()
+        </div>
+
+        <div class="carousel-inner">
+            @foreach (var item in Model.Select((value, index) => new { value, index }))
+            {
+                <div class="carousel-item @(item.index == 0 ? "active" : "")">
+                    @if (!string.IsNullOrEmpty(item.value.Link))
+                    {
+                        <a href="@item.value.Link">
+                            <img src="@item.value.ImageUrl"
+                                 class="d-block w-100"
+                                 alt="@item.value.Caption">
+                        </a>
+                    }
+                    else
+                    {
+                        <img src="@item.value.ImageUrl"
+                             class="d-block w-100"
+                             alt="@item.value.Caption">
+                    }
+                </div>
+            }
+        </div>
+
+        <button class="carousel-control-prev"
+                type="button"
+                data-bs-target="#homeCarousel"
+                data-bs-slide="prev">
+            <span class="carousel-control-prev-icon"></span>
+        </button>
+
+        <button class="carousel-control-next"
+                type="button"
+                data-bs-target="#homeCarousel"
+                data-bs-slide="next">
+            <span class="carousel-control-next-icon"></span>
+        </button>
+    </div>
+
+
+    @if (Model.Any(x => !string.IsNullOrEmpty(x.Caption)))
+    {
+        <div class="carousel-caption-outside text-center mb-5">
+            <h5 id="carouselCaptionText">
+                @Model.First().Caption
+            </h5>
+        </div>
+    }
+
+    <div class="text-center mt-5 mb-4">
+        <h3 class="lead">
+            Manage your products, categories, users, and stock.
+        </h3>
+    </div>
+
+    <div class="row text-center g-4 mb-5">
+        <div class="col-md-3">
+            <div class="card bg-body shadow-sm h-100">
+                <div class="card-body">
+                    <i class="bi bi-box-seam display-1 text-primary mb-3"></i>
+                    <h5 class="card-title">Products</h5>
+                    <p class="card-text mb-3">
+                        View and manage your products and stock levels.
+                    </p>
+                    <a asp-controller="Product" asp-action="Index"
+                       class="btn btn-primary btn-sm">Go</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card bg-body shadow-sm h-100">
+                <div class="card-body">
+                    <i class="bi bi-tags display-1 text-success mb-3"></i>
+                    <h5 class="card-title">Categories</h5>
+                    <p class="card-text mb-3">
+                        Add, edit, or delete categories to organize your products.
+                    </p>
+                    <a asp-controller="Category" asp-action="Index"
+                       class="btn btn-success btn-sm">Go</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card bg-body shadow-sm h-100">
+                <div class="card-body">
+                    <i class="bi bi-people display-1 text-warning mb-3"></i>
+                    <h5 class="card-title">Users</h5>
+                    <p class="card-text mb-3">
+                        Manage application users, roles, and passwords.
+                    </p>
+                    <a asp-controller="ApplicationUser" asp-action="Index"
+                       class="btn btn-warning btn-sm">Go</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card bg-body shadow-sm h-100">
+                <div class="card-body">
+                    <i class="bi bi-bar-chart-line display-1 text-danger mb-3"></i>
+                    <h5 class="card-title">Dashboard</h5>
+                    <p class="card-text mb-3">
+                        View order trends, heatmaps and distributions.
+                    </p>
+                    <a asp-controller="Dashboard" asp-action="Index"
+                       class="btn btn-danger btn-sm">Go</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+
+
+@* for caption *@
+<script>
+    const carousel = document.getElementById('homeCarousel');
+    const captionEl = document.getElementById('carouselCaptionText');
+
+    const captions = [
+        @foreach (var item in Model)
+        {
+                @: "@(item.Caption ?? "")",
+        }
+    ];
+
+    carousel.addEventListener('slid.bs.carousel', function (e) {
+        captionEl.textContent = captions[e.to];
+    });
+</script>
+
+@* for counter to be stationary *@
+<script>
+    document.getElementById('homeCarousel')
+        .addEventListener('slid.bs.carousel', function (e) {
+
+            const counter = document.getElementById('carouselCounter');
+            const total = this.querySelectorAll('.carousel-item').length;
+
+            counter.textContent = (e.to + 1) + ' / ' + total;
+        });
+</script>
