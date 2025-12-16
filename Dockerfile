@@ -1,5 +1,3 @@
-# syntax=docker/dockerfile:1
-
 # =========================
 # Build stage
 # =========================
@@ -25,7 +23,7 @@ COPY . .
 RUN dotnet publish InventoryWeb/InventoryWeb.csproj \
     -c Release \
     -o /app/publish \
-    /p:TreatWarningsAsErrors=false \
+    /p:TreatWarningsAsErrors=false
 
 # =========================
 # Runtime stage
