@@ -24,7 +24,6 @@ RUN dotnet publish InventoryWeb/InventoryWeb.csproj \
     -c Release \
     -o /app/publish \
     /p:TreatWarningsAsErrors=false \
-    /warnaserror-
 
 # =========================
 # Runtime stage
