@@ -31,7 +31,7 @@ RUN dotnet publish InventoryWeb/InventoryWeb.csproj \
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 
-COPY --from=build /app/publish .
+COPY --from=build-env /app/publish .
 
 ENV ASPNETCORE_URLS=http://0.0.0.0:8080
 EXPOSE 8080
